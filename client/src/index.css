@@ -1,12 +1,31 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 @import "tailwindcss";
 
-*{
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
   font-family: "Outfit", sans-serif;
 }
 
-/* Tailwind CSS v4 directive. */
-/* stylelint-disable-next-line at-rule-no-unknown */
-@theme{
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #05052b;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+@theme {
   --color-primary: #5044E5;
 }
