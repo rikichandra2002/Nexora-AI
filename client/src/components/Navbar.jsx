@@ -14,8 +14,8 @@ const Navbar = () => {
       
       <img
         src={assets.logo}
-        alt="Logo"
-        className='w-32 sm:w-44 cursor-pointer'
+        alt="Nexora.ai Logo"
+        className='w-36 sm:w-48 h-auto cursor-pointer object-contain hover:opacity-95 transition-all duration-300 transform hover:scale-[1.02]'
         onClick={() => navigate('/')}
       />
 
