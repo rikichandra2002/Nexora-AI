@@ -1,6 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 @import "tailwindcss";
 
+
+/* =========================================================
+   GLOBAL RESET
+========================================================= */
+
 * {
   margin: 0;
   padding: 0;
@@ -20,7 +25,6 @@ body,
 body {
   background: #05052b;
   overflow-x: hidden;
-  width: 100%;
 }
 
 #root {
@@ -29,12 +33,19 @@ body {
   overflow-x: hidden;
 }
 
+
+/* =========================================================
+   THEME
+========================================================= */
+
 @theme {
   --color-primary: #5044E5;
 }
-/* ================================
+
+
+/* =========================================================
    RESPONSIVE AI TOOLS & TESTIMONIALS
-================================ */
+========================================================= */
 
 .ai-tools-grid,
 .testimonial-grid {
@@ -54,4 +65,582 @@ body {
     grid-template-columns: 1fr !important;
     gap: 18px !important;
   }
+}
+
+
+/* =========================================================
+   MARKDOWN / AI GENERATED CONTENT
+========================================================= */
+
+.reset-tw {
+  display: block;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  box-sizing: border-box;
+
+  color: #334155;
+  font-family: "Outfit", sans-serif;
+
+  font-size: 14px;
+  line-height: 1.8;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+
+/* =========================================================
+   PARAGRAPHS
+========================================================= */
+
+.reset-tw p {
+  width: 100%;
+  max-width: 100%;
+
+  margin: 0 0 14px;
+
+  color: #475569;
+
+  line-height: 1.8;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.reset-tw p:last-child {
+  margin-bottom: 0;
+}
+
+
+/* =========================================================
+   HEADINGS
+========================================================= */
+
+.reset-tw h1 {
+  max-width: 100%;
+
+  margin: 0 0 16px;
+
+  font-size: 24px;
+  line-height: 1.3;
+
+  font-weight: 700;
+
+  color: #0f172a;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.reset-tw h2 {
+  max-width: 100%;
+
+  margin: 24px 0 12px;
+
+  font-size: 20px;
+  line-height: 1.4;
+
+  font-weight: 650;
+
+  color: #1e293b;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.reset-tw h3 {
+  max-width: 100%;
+
+  margin: 20px 0 10px;
+
+  font-size: 17px;
+  line-height: 1.5;
+
+  font-weight: 600;
+
+  color: #334155;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.reset-tw h4 {
+  max-width: 100%;
+
+  margin: 16px 0 8px;
+
+  font-size: 15px;
+
+  font-weight: 600;
+
+  color: #475569;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+
+/* =========================================================
+   UNORDERED LISTS / BULLET POINTS
+========================================================= */
+
+.reset-tw ul {
+  display: block;
+
+  list-style-type: disc;
+
+  padding-left: 28px;
+
+  margin: 14px 0 18px;
+
+  width: 100%;
+  max-width: 100%;
+}
+
+.reset-tw ul ul {
+  list-style-type: circle;
+
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+
+.reset-tw ul li {
+  display: list-item;
+
+  padding-left: 5px;
+
+  margin-bottom: 8px;
+
+  color: #475569;
+
+  line-height: 1.7;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.reset-tw ul li::marker {
+  color: #db2777;
+
+  font-size: 0.9em;
+}
+
+
+/* =========================================================
+   ORDERED LISTS
+========================================================= */
+
+.reset-tw ol {
+  display: block;
+
+  list-style-type: decimal;
+
+  padding-left: 28px;
+
+  margin: 14px 0 18px;
+
+  width: 100%;
+  max-width: 100%;
+}
+
+.reset-tw ol li {
+  display: list-item;
+
+  padding-left: 5px;
+
+  margin-bottom: 8px;
+
+  color: #475569;
+
+  line-height: 1.7;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.reset-tw ol li::marker {
+  color: #db2777;
+
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   BOLD TEXT
+========================================================= */
+
+.reset-tw strong {
+  font-weight: 650;
+
+  color: #1e293b;
+}
+
+
+/* =========================================================
+   ITALIC TEXT
+========================================================= */
+
+.reset-tw em {
+  font-style: italic;
+
+  color: #475569;
+}
+
+
+/* =========================================================
+   LINKS
+========================================================= */
+
+.reset-tw a {
+  color: #db2777;
+
+  text-decoration: none;
+
+  font-weight: 500;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.reset-tw a:hover {
+  text-decoration: underline;
+}
+
+
+/* =========================================================
+   INLINE CODE
+========================================================= */
+
+.reset-tw code {
+  background: #fdf2f8;
+
+  color: #be185d;
+
+  border: 1px solid #fbcfe8;
+
+  border-radius: 6px;
+
+  padding: 2px 6px;
+
+  font-family: monospace;
+
+  font-size: 0.9em;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+
+/* =========================================================
+   CODE BLOCKS
+========================================================= */
+
+.reset-tw pre {
+  display: block;
+
+  width: 100%;
+  max-width: 100%;
+
+  margin: 16px 0;
+
+  padding: 16px 18px;
+
+  background: #0f172a;
+
+  border: 1px solid #1e293b;
+
+  border-radius: 12px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  color: #e2e8f0;
+
+  box-sizing: border-box;
+}
+
+.reset-tw pre code {
+  display: block;
+
+  width: max-content;
+  min-width: 100%;
+
+  background: transparent;
+
+  border: none;
+
+  padding: 0;
+
+  color: inherit;
+
+  font-family: monospace;
+
+  font-size: 13px;
+
+  line-height: 1.7;
+
+  white-space: pre;
+}
+
+
+/* =========================================================
+   BLOCKQUOTES
+========================================================= */
+
+.reset-tw blockquote {
+  width: 100%;
+  max-width: 100%;
+
+  margin: 16px 0;
+
+  padding: 12px 18px;
+
+  border-left: 4px solid #ec4899;
+
+  background: #fdf2f8;
+
+  border-radius: 0 10px 10px 0;
+
+  color: #475569;
+
+  box-sizing: border-box;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+
+/* =========================================================
+   HORIZONTAL LINE
+========================================================= */
+
+.reset-tw hr {
+  width: 100%;
+
+  margin: 22px 0;
+
+  border: 0;
+
+  border-top: 1px solid #e2e8f0;
+}
+
+
+/* =========================================================
+   TABLES
+========================================================= */
+
+.reset-tw table {
+  display: block;
+
+  width: 100%;
+  max-width: 100%;
+
+  margin: 18px 0;
+
+  border-spacing: 0;
+
+  border: 1px solid #e2e8f0;
+
+  border-radius: 10px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  box-sizing: border-box;
+}
+
+.reset-tw thead,
+.reset-tw tbody {
+  width: 100%;
+}
+
+.reset-tw th {
+  padding: 11px 14px;
+
+  text-align: left;
+
+  background: #fdf2f8;
+
+  border-bottom: 1px solid #fbcfe8;
+
+  color: #9d174d;
+
+  font-weight: 600;
+
+  white-space: nowrap;
+}
+
+.reset-tw td {
+  padding: 11px 14px;
+
+  border-bottom: 1px solid #f1f5f9;
+
+  color: #475569;
+
+  overflow-wrap: anywhere;
+}
+
+.reset-tw tr:last-child td {
+  border-bottom: none;
+}
+
+
+/* =========================================================
+   IMAGES INSIDE MARKDOWN
+========================================================= */
+
+.reset-tw img {
+  display: block;
+
+  max-width: 100%;
+  height: auto;
+
+  border-radius: 10px;
+
+  margin: 12px 0;
+}
+
+
+/* =========================================================
+   GENERATED RESULT BOX
+========================================================= */
+
+/*
+   This is important for your CreationItem.
+
+   It prevents the generated content from escaping
+   outside the result card.
+*/
+
+.generated-result-box {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  height: 420px;
+  max-height: 420px;
+
+  box-sizing: border-box;
+
+  padding: 22px 24px;
+
+  background: #f8fafc;
+
+  border: 1px solid #e2e8f0;
+
+  border-radius: 12px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+
+/* Chrome / Edge scrollbar */
+
+.generated-result-box::-webkit-scrollbar {
+  width: 7px;
+}
+
+.generated-result-box::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.generated-result-box::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+
+  border-radius: 999px;
+}
+
+.generated-result-box::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+
+/* =========================================================
+   MARKDOWN INSIDE GENERATED RESULT
+========================================================= */
+
+.generated-result-box .reset-tw {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  box-sizing: border-box;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+
+/* =========================================================
+   MOBILE MARKDOWN
+========================================================= */
+
+@media (max-width: 639px) {
+
+  .reset-tw {
+    font-size: 13px;
+
+    line-height: 1.7;
+  }
+
+  .reset-tw h1 {
+    font-size: 21px;
+  }
+
+  .reset-tw h2 {
+    font-size: 18px;
+  }
+
+  .reset-tw h3 {
+    font-size: 16px;
+  }
+
+  .reset-tw ul,
+  .reset-tw ol {
+    padding-left: 24px;
+  }
+
+  .reset-tw pre {
+    padding: 12px;
+  }
+
+  .generated-result-box {
+    height: 350px;
+    max-height: 350px;
+
+    padding: 16px;
+  }
+
+}
+
+
+/* =========================================================
+   VERY SMALL SCREENS
+========================================================= */
+
+@media (max-width: 400px) {
+
+  .generated-result-box {
+    height: 320px;
+    max-height: 320px;
+
+    padding: 14px;
+  }
+
+  .reset-tw {
+    font-size: 13px;
+  }
+
+  .reset-tw ul,
+  .reset-tw ol {
+    padding-left: 21px;
+  }
+
 }

@@ -9,95 +9,48 @@ const Layout = () => {
   const [sidebar, setSidebar] = useState(false)
 
   return (
-    <div className="h-screen w-full flex flex-col overflow-hidden bg-gray-50">
+    <div className="h-screen w-full flex flex-col overflow-hidden bg-slate-50">
 
-      {/* ================= NAVBAR ================= */}
-
-      <header className="
-        h-14
-        min-h-14
-        w-full
-        px-5
-        sm:px-7
-        flex
-        items-center
-        justify-between
-        bg-white
-        border-b
-        border-gray-200
-        z-50
-      ">
+      {/* Navbar */}
+      <header className="h-[70px] min-h-[70px] w-full flex items-center px-6 bg-white border-b border-slate-200">
 
         <img
           src={assets.logo}
           alt="Nexora AI"
           onClick={() => navigate('/')}
-          className="
-            w-[135px]
-            cursor-pointer
-            object-contain
-          "
+          className="w-[135px] cursor-pointer object-contain"
         />
 
-        {/* Mobile Menu Button */}
         <button
-          type="button"
           onClick={() => setSidebar(prev => !prev)}
-          className="
-            md:hidden
-            p-2
-            rounded-lg
-            text-gray-600
-            hover:bg-gray-100
-            transition
-          "
+          className="ml-auto md:hidden p-2 rounded-lg hover:bg-slate-100"
         >
           {sidebar ? (
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 text-slate-600" />
           ) : (
-            <Menu className="w-5 h-5" />
+            <Menu className="w-5 h-5 text-slate-600" />
           )}
         </button>
 
       </header>
 
 
-      {/* ================= MAIN AREA ================= */}
+      {/* Main Area */}
+      <div className="flex flex-1 min-h-0">
 
-      <div className="flex flex-1 min-h-0 relative">
-
-        {/* Mobile backdrop */}
-        {sidebar && (
-          <div
-            onClick={() => setSidebar(false)}
-            className="
-              fixed
-              inset-0
-              top-14
-              bg-black/20
-              z-30
-              md:hidden
-            "
-          />
-        )}
-
-
-        {/* Sidebar */}
         <Sidebar
           sidebar={sidebar}
           setSidebar={setSidebar}
         />
 
+        {/* Content */}
+        <main className="flex-1 min-w-0 min-h-0 overflow-y-auto bg-slate-50">
 
-        {/* Page */}
-        <main className="
-          flex-1
-          min-w-0
-          h-full
-          overflow-y-auto
-          bg-gray-50
-        ">
-          <Outlet />
+          {/* LARGE SPACE BETWEEN SIDEBAR AND CONTENT */}
+          <div className="pt-7 pr-8 pb-10 pl-12">
+            <Outlet />
+          </div>
+
         </main>
 
       </div>
