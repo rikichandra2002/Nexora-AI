@@ -2,34 +2,97 @@ import React from 'react'
 import { AiToolsData } from '../assets/assets'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '@clerk/react'
+
 const AiTools = () => {
 
   const navigate = useNavigate()
-  const {user} = useUser()
+  const { user } = useUser()
 
   return (
-    <section className='w-full px-4 sm:px-20 xl:px-32 -mt-40 pt-0 pb-24'>
-      <div className='w-full flex flex-col items-center text-center mx-auto'>
-        <h2 className='text-slate-800 text-[42px] font-semibold'>
+    <section
+      style={{
+        width: '100%',
+        padding: '64px 20px 96px',
+        overflow: 'hidden',
+      }}
+    >
+
+      {/* Heading */}
+      <div
+        style={{
+          width: '100%',
+          maxWidth: '800px',
+          margin: '0 auto',
+          textAlign: 'center',
+        }}
+      >
+        <h2 className="text-slate-800 text-4xl sm:text-[42px] font-semibold leading-tight">
           Powerful AI Tools
         </h2>
 
-        <p className='text-slate-600 mt-4'>
+        <p className="text-slate-600 mt-4 text-sm sm:text-base leading-6">
           Everything you need to create, enhance, and optimize your content
           with cutting-edge AI technology.
         </p>
       </div>
-      <div className='flex flex-wrap mt-10 justify-center '>
-        {AiToolsData.map((tool, index) =>(
-          <div key={index} className=' p-8 m-4 max-w-xs rounded-lg bg-[#FDFDFE] shadow-1g border border-gray-100 hover:-translate-y-1
-           transition-all duration-300 cursor-pointer' onClick={()=>user && navigate(tool.path)}>
-             <tool.Icon className='w-12 h-12 p-3 text-white rounded-xl' style={{ background: `linear-gradient(to bottom, ${tool.bg.from}, ${tool.bg.to})`}}/>
-             <h3 className='mt-6 mb-3 text-lg font-semibold'> {tool.title} </h3>
-             <p className='text-gray-400 text-sm max-w-[95%]'> {tool.description} </p>
-             </div>
-        ) )}
+
+
+      {/* AI Tools */}
+      <div
+        style={{
+          width: '100%',
+          maxWidth: '1152px',
+          margin: '48px auto 0',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+          gap: '24px',
+        }}
+        className="ai-tools-grid"
+      >
+
+        {AiToolsData.map((tool, index) => (
+
+          <div
+            key={index}
+            onClick={() => user && navigate(tool.path)}
+            className="
+              min-h-[210px]
+              p-6
+              sm:p-7
+              rounded-2xl
+              bg-[#FDFDFE]
+              border
+              border-gray-100
+              shadow-sm
+              hover:shadow-lg
+              hover:-translate-y-1
+              transition-all
+              duration-300
+              cursor-pointer
+            "
+          >
+
+            <tool.Icon
+              className="w-12 h-12 p-3 text-white rounded-xl"
+              style={{
+                background: `linear-gradient(to bottom, ${tool.bg.from}, ${tool.bg.to})`
+              }}
+            />
+
+            <h3 className="mt-5 mb-3 text-lg font-semibold text-slate-800">
+              {tool.title}
+            </h3>
+
+            <p className="text-gray-400 text-sm leading-6">
+              {tool.description}
+            </p>
+
+          </div>
+
+        ))}
 
       </div>
+
     </section>
   )
 }

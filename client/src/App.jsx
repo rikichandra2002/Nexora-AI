@@ -12,40 +12,53 @@ import RemoveObject from './pages/RemoveObject'
 import ReviewResume from './pages/ReviewResume'
 import Community from './pages/Community'
 
+import ProtectedRoute from './components/ProtectedRoute'
+
 const App = () => {
   return (
     <div>
       <Routes>
 
-        {/* Home Page */}
+        {/* =========================
+            PUBLIC ROUTES
+        ========================== */}
+
         <Route path="/" element={<Home />} />
 
-        {/* AI Dashboard Layout */}
-        <Route path="/ai" element={<Layout />}>
 
-          {/* /ai */}
-          <Route index element={<Dashboard />} />
+        {/* =========================
+            PROTECTED AI ROUTES
+        ========================== */}
 
-          {/* /ai/write-article */}
-          <Route path="write-article" element={<WriteArticle />} />
+        <Route element={<ProtectedRoute />}>
 
-          {/* /ai/blog-titles */}
-          <Route path="blog-titles" element={<BlogTitles />} />
+          <Route path="/ai" element={<Layout />}>
 
-          {/* /ai/generate-images */}
-          <Route path="generate-images" element={<GenerateImages  />} />
+            {/* /ai */}
+            <Route index element={<Dashboard />} />
 
-          {/* /ai/remove-background */}
-          <Route path="remove-background" element={<RemoveBackground />} />
+            {/* /ai/write-article */}
+            <Route path="write-article" element={<WriteArticle />} />
 
-          {/* /ai/remove-object */}
-          <Route path="remove-object" element={<RemoveObject />} />
+            {/* /ai/blog-titles */}
+            <Route path="blog-titles" element={<BlogTitles />} />
 
-          {/* /ai/review-resume */}
-          <Route path="review-resume" element={<ReviewResume />} />
+            {/* /ai/generate-images */}
+            <Route path="generate-images" element={<GenerateImages />} />
 
-          {/* /ai/community */}
-          <Route path="community" element={<Community />} />
+            {/* /ai/remove-background */}
+            <Route path="remove-background" element={<RemoveBackground />} />
+
+            {/* /ai/remove-object */}
+            <Route path="remove-object" element={<RemoveObject />} />
+
+            {/* /ai/review-resume */}
+            <Route path="review-resume" element={<ReviewResume />} />
+
+            {/* /ai/community */}
+            <Route path="community" element={<Community />} />
+
+          </Route>
 
         </Route>
 

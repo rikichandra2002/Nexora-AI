@@ -20,12 +20,38 @@ body,
 body {
   background: #05052b;
   overflow-x: hidden;
+  width: 100%;
 }
 
 #root {
   min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 @theme {
   --color-primary: #5044E5;
+}
+/* ================================
+   RESPONSIVE AI TOOLS & TESTIMONIALS
+================================ */
+
+.ai-tools-grid,
+.testimonial-grid {
+  width: 100%;
+}
+
+@media (max-width: 1023px) {
+  .ai-tools-grid,
+  .testimonial-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 639px) {
+  .ai-tools-grid,
+  .testimonial-grid {
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+  }
 }
