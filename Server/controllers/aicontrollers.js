@@ -4,8 +4,10 @@ import { clerkClient } from "@clerk/express";
 import axios from "axios";
 import cloudinary from "../configs/cloudinary.js";
 import fs from "fs";
-import { PDFParse } from "pdf-parse";
 
+// IMPORTANT:
+// Do NOT import pdf-parse here.
+// It causes pdfjs-dist/DOMMatrix to load during Vercel startup.
 
 // ==========================================
 // AI CONFIGURATION
@@ -116,7 +118,6 @@ export const generateBlogTitle = async (req, res) => {
         const plan = req.plan;
         const free_usage = req.free_usage || 0;
 
-        // Validate prompt
         if (!prompt || !prompt.trim()) {
             return res.json({
                 success: false,
@@ -124,17 +125,12 @@ export const generateBlogTitle = async (req, res) => {
             });
         }
 
-        // Free usage limit
         if (plan !== "premium" && free_usage >= 10) {
             return res.json({
                 success: false,
                 message: "Limit reached. Upgrade to continue.",
             });
         }
-
-        // ==========================================
-        // AI PROMPT
-        // ==========================================
 
         const aiPrompt = `
 Generate exactly 5 creative, catchy and SEO-friendly blog titles.
@@ -162,29 +158,26 @@ IMPORTANT RULES:
 - Put each title on a separate line.
 `;
 
-        // ==========================================
-        // GEMINI
-        // ==========================================
-
         const response = await AI.chat.completions.create({
             model: "gemini-3.5-flash-lite",
-
             messages: [
                 {
                     role: "user",
                     content: aiPrompt,
                 },
             ],
-
             temperature: 0.8,
             max_tokens: 200,
         });
 
-        const content = response.choices[0].message.content;
+        const content = response.choices?.[0]?.message?.content;
 
-        // ==========================================
-        // SAVE TO DATABASE
-        // ==========================================
+        if (!content) {
+            return res.json({
+                success: false,
+                message: "AI did not return any titles.",
+            });
+        }
 
         await sql`
             INSERT INTO creations (
@@ -201,10 +194,6 @@ IMPORTANT RULES:
             )
         `;
 
-        // ==========================================
-        // UPDATE FREE USAGE
-        // ==========================================
-
         if (plan !== "premium") {
             await clerkClient.users.updateUserMetadata(userId, {
                 privateMetadata: {
@@ -212,10 +201,6 @@ IMPORTANT RULES:
                 },
             });
         }
-
-        // ==========================================
-        // RESPONSE
-        // ==========================================
 
         res.json({
             success: true,
@@ -225,12 +210,14 @@ IMPORTANT RULES:
     } catch (error) {
         console.error("Generate Blog Title Error:", error);
 
-        res.json({
+        res.status(500).json({
             success: false,
             message: error.message,
         });
     }
 };
+
+
 // ==========================================
 // GENERATE IMAGE
 // ==========================================
@@ -261,8 +248,12 @@ export const generateImage = async (req, res) => {
             });
         }
 
-        // Generate image using Clipdrop
+        // ==========================================
+        // CLIPDROP
+        // ==========================================
+
         const formData = new FormData();
+
         formData.append("prompt", prompt);
 
         const { data } = await axios.post(
@@ -276,11 +267,17 @@ export const generateImage = async (req, res) => {
             }
         );
 
-        // Convert image to Base64
+        // ==========================================
+        // BASE64
+        // ==========================================
+
         const imageDataUri =
             `data:image/png;base64,${Buffer.from(data).toString("base64")}`;
 
-        // Upload to Cloudinary
+        // ==========================================
+        // CLOUDINARY
+        // ==========================================
+
         const result = await cloudinary.uploader.upload(
             imageDataUri,
             {
@@ -289,7 +286,10 @@ export const generateImage = async (req, res) => {
             }
         );
 
-        // Save to database
+        // ==========================================
+        // DATABASE
+        // ==========================================
+
         await sql`
             INSERT INTO creations (
                 user_id,
@@ -347,7 +347,6 @@ export const removeImageBackground = async (req, res) => {
             });
         }
 
-        // Upload original image
         const uploadResult = await cloudinary.uploader.upload(
             image.path,
             {
@@ -356,7 +355,6 @@ export const removeImageBackground = async (req, res) => {
             }
         );
 
-        // Apply background removal
         const imageUrl = cloudinary.url(uploadResult.public_id, {
             resource_type: "image",
             secure: true,
@@ -405,7 +403,6 @@ export const removeImageObject = async (req, res) => {
         const image = req.file;
         const plan = req.plan;
 
-        // Premium check
         if (plan !== "premium") {
             return res.json({
                 success: false,
@@ -413,7 +410,6 @@ export const removeImageObject = async (req, res) => {
             });
         }
 
-        // Check image
         if (!image) {
             return res.json({
                 success: false,
@@ -421,7 +417,6 @@ export const removeImageObject = async (req, res) => {
             });
         }
 
-        // Check object description
         if (!object || !object.trim()) {
             return res.json({
                 success: false,
@@ -430,7 +425,7 @@ export const removeImageObject = async (req, res) => {
         }
 
         // ==========================================
-        // UPLOAD ORIGINAL IMAGE TO CLOUDINARY
+        // CLOUDINARY UPLOAD
         // ==========================================
 
         const uploadResult = await cloudinary.uploader.upload(
@@ -445,7 +440,7 @@ export const removeImageObject = async (req, res) => {
         console.log(uploadResult.secure_url);
 
         // ==========================================
-        // CREATE GENERATIVE REMOVE URL
+        // GENERATIVE REMOVE
         // ==========================================
 
         const cleanObject = object
@@ -469,7 +464,7 @@ export const removeImageObject = async (req, res) => {
         console.log(imageUrl);
 
         // ==========================================
-        // SAVE TO DATABASE
+        // DATABASE
         // ==========================================
 
         await sql`
@@ -487,10 +482,6 @@ export const removeImageObject = async (req, res) => {
             )
         `;
 
-        // ==========================================
-        // SEND RESULT TO FRONTEND
-        // ==========================================
-
         res.json({
             success: true,
             content: imageUrl,
@@ -499,12 +490,13 @@ export const removeImageObject = async (req, res) => {
     } catch (error) {
         console.error("Remove Object Error:", error);
 
-        res.json({
+        res.status(500).json({
             success: false,
             message: error.message,
         });
     }
 };
+
 
 // ==========================================
 // REVIEW RESUME
@@ -536,6 +528,14 @@ export const resumeReview = async (req, res) => {
                 message: "Please upload a resume PDF",
             });
         }
+
+        // ==========================================
+        // LOAD PDF PARSER ONLY WHEN NEEDED
+        // ==========================================
+
+        // IMPORTANT:
+        // Do NOT move this import to the top of the file.
+        const { PDFParse } = await import("pdf-parse");
 
         // ==========================================
         // READ PDF
@@ -665,7 +665,7 @@ ${resumeText}
     } catch (error) {
         console.error("Resume Review Error:", error);
 
-        res.json({
+        res.status(500).json({
             success: false,
             message: error.message,
         });
