@@ -1,25 +1,41 @@
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
+import { clerkMiddleware, requireAuth } from "@clerk/express";
+
+import aiRouter from "./routes/aiRoutes.js";
+import userRouter from "./routes/userRoutes.js";
 
 const app = express();
 
 // ==========================================
-// BASIC MIDDLEWARE
+// CORS
 // ==========================================
 
 app.use(
     cors({
         origin: true,
         credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
     })
 );
+
+// ==========================================
+// BODY PARSER
+// ==========================================
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // ==========================================
-// TEST ROUTE
+// CLERK MIDDLEWARE
+// ==========================================
+
+app.use(clerkMiddleware());
+
+// ==========================================
+// ROOT TEST ROUTE
 // ==========================================
 
 app.get("/", (req, res) => {
@@ -27,46 +43,25 @@ app.get("/", (req, res) => {
 });
 
 // ==========================================
-// LOAD CLERK + ROUTES
+// AUTHENTICATION
 // ==========================================
 
-const startRoutes = async () => {
-    try {
-        const { clerkMiddleware, requireAuth } = await import(
-            "@clerk/express"
-        );
-
-        const { default: aiRouter } = await import(
-            "./routes/aiRoutes.js"
-        );
-
-        const { default: userRouter } = await import(
-            "./routes/userRoutes.js"
-        );
-
-        // Clerk middleware
-        app.use(clerkMiddleware());
-
-        // Authentication
-        app.use(requireAuth());
-
-        // AI routes
-        app.use("/api/ai", aiRouter);
-
-        // User routes
-        app.use("/api/user", userRouter);
-
-        console.log("✅ Clerk and API routes loaded");
-    } catch (error) {
-        console.error("❌ Failed to load API routes:");
-        console.error(error);
-    }
-};
-
-await startRoutes();
+app.use(requireAuth());
 
 // ==========================================
-// 404
+// AI ROUTES
+// ==========================================
+
+app.use("/api/ai", aiRouter);
+
+// ==========================================
+// USER ROUTES
+// ==========================================
+
+app.use("/api/user", userRouter);
+
+// ==========================================
+// 404 HANDLER
 // ==========================================
 
 app.use((req, res) => {
@@ -82,7 +77,7 @@ app.use((req, res) => {
 // ==========================================
 
 app.use((err, req, res, next) => {
-    console.error("❌ Server Error:", err);
+    console.error("SERVER ERROR:", err);
 
     res.status(err.status || 500).json({
         success: false,
@@ -91,7 +86,7 @@ app.use((err, req, res, next) => {
 });
 
 // ==========================================
-// LOCAL DEVELOPMENT
+// LOCAL SERVER
 // ==========================================
 
 if (!process.env.VERCEL) {
@@ -108,7 +103,7 @@ if (!process.env.VERCEL) {
 }
 
 // ==========================================
-// VERCEL
+// VERCEL EXPORT
 // ==========================================
 
 export default app;
