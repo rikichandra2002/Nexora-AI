@@ -8,9 +8,15 @@ import {
   Eraser,
   X,
 } from 'lucide-react'
+import axios from 'axios'
+import { useAuth } from '@clerk/react'
+
+axios.defaults.baseURL = import.meta.env.VITE_BASE_URL
 
 const RemoveBackground = () => {
   const fileInputRef = useRef(null)
+
+  const { getToken } = useAuth()
 
   const [selectedFile, setSelectedFile] = useState(null)
   const [previewUrl, setPreviewUrl] = useState('')
@@ -72,21 +78,47 @@ const RemoveBackground = () => {
     setLoading(true)
     setProcessedImage('')
 
-    // -----------------------------------------------------
-    // TEMPORARY DEMO
-    // Replace this section with your actual API call.
-    // -----------------------------------------------------
+    try {
+      const token = await getToken()
 
-    setTimeout(() => {
-      // Demo image
-      setProcessedImage(previewUrl)
+      const formData = new FormData()
 
+      formData.append('image', selectedFile)
+
+      const { data } = await axios.post(
+        '/api/ai/remove-image-background',
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      )
+
+      if (!data.success) {
+        throw new Error(
+          data.message ||
+            'Failed to remove image background'
+        )
+      }
+
+      setProcessedImage(data.content)
+
+    } catch (error) {
+      console.error(
+        'Background removal error:',
+        error
+      )
+
+      alert(
+        error.response?.data?.message ||
+          error.message ||
+          'Something went wrong while removing the background.'
+      )
+    } finally {
       setLoading(false)
-
-      console.log({
-        file: selectedFile,
-      })
-    }, 1500)
+    }
   }
 
   // =====================================================
@@ -105,7 +137,8 @@ const RemoveBackground = () => {
       const link = document.createElement('a')
 
       link.href = url
-      link.download = 'nexora-background-removed.png'
+      link.download =
+        'nexora-background-removed.png'
 
       document.body.appendChild(link)
 
@@ -114,8 +147,11 @@ const RemoveBackground = () => {
       document.body.removeChild(link)
 
       URL.revokeObjectURL(url)
+
     } catch (error) {
       console.error('Download failed:', error)
+
+      alert('Unable to download the image.')
     }
   }
 
@@ -137,6 +173,7 @@ const RemoveBackground = () => {
           margin: '0 auto',
         }}
       >
+
         {/* =====================================================
             PAGE HEADER
         ====================================================== */}
@@ -225,6 +262,7 @@ const RemoveBackground = () => {
             width: '100%',
           }}
         >
+
           {/* ===================================================
               LEFT CARD
           ==================================================== */}
@@ -243,6 +281,7 @@ const RemoveBackground = () => {
               boxSizing: 'border-box',
             }}
           >
+
             {/* Violet top line */}
 
             <div
@@ -264,6 +303,7 @@ const RemoveBackground = () => {
                 flex: 1,
               }}
             >
+
               {/* =================================================
                   CARD HEADER
               ================================================== */}
@@ -331,6 +371,7 @@ const RemoveBackground = () => {
                   flex: 1,
                 }}
               >
+
                 {/* =================================================
                     UPLOAD LABEL
                 ================================================== */}
@@ -420,6 +461,7 @@ const RemoveBackground = () => {
                     </span>
                   </button>
                 ) : (
+
                   /* =================================================
                       SELECTED FILE
                   ================================================== */
@@ -438,6 +480,7 @@ const RemoveBackground = () => {
                       gap: '12px',
                     }}
                   >
+
                     {/* Preview */}
 
                     <div
@@ -627,6 +670,7 @@ const RemoveBackground = () => {
               boxSizing: 'border-box',
             }}
           >
+
             {/* Violet top line */}
 
             <div
@@ -655,6 +699,7 @@ const RemoveBackground = () => {
                   justifyContent: 'space-between',
                 }}
               >
+
                 <div
                   style={{
                     display: 'flex',
@@ -726,7 +771,7 @@ const RemoveBackground = () => {
                   >
                     <Download
                       size={14}
-                      color="#64748b"
+                      color="#7c3aed"
                     />
                   </button>
                 )}
@@ -745,6 +790,7 @@ const RemoveBackground = () => {
                 boxSizing: 'border-box',
               }}
             >
+
               {/* =================================================
                   LOADING
               ================================================== */}
@@ -813,14 +859,26 @@ const RemoveBackground = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    backgroundColor: '#f8fafc',
+
+                    // Checkerboard background makes transparency
+                    // visible.
+                    backgroundImage: `
+                      linear-gradient(45deg, #f1f5f9 25%, transparent 25%),
+                      linear-gradient(-45deg, #f1f5f9 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #f1f5f9 75%),
+                      linear-gradient(-45deg, transparent 75%, #f1f5f9 75%)
+                    `,
+                    backgroundSize: '20px 20px',
+                    backgroundPosition:
+                      '0 0, 0 10px, 10px -10px, -10px 0px',
+
                     borderRadius: '10px',
                     overflow: 'hidden',
                   }}
                 >
                   <img
                     src={processedImage}
-                    alt="Processed"
+                    alt="Background removed"
                     style={{
                       maxWidth: '100%',
                       maxHeight: '100%',

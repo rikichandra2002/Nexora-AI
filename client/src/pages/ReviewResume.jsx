@@ -1,20 +1,25 @@
 import React, { useRef, useState } from 'react'
+import axios from 'axios'
+import ReactMarkdown from 'react-markdown'
+import { useAuth } from '@clerk/react'
 import {
   FileText,
   Sparkles,
   Upload,
   Loader2,
   Download,
-  CheckCircle2,
   X,
 } from 'lucide-react'
 
+axios.defaults.baseURL = import.meta.env.VITE_BASE_URL
+
 const ReviewResume = () => {
   const fileInputRef = useRef(null)
+  const { getToken } = useAuth()
 
   const [selectedFile, setSelectedFile] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [analysis, setAnalysis] = useState(null)
+  const [analysis, setAnalysis] = useState('')
 
   // =====================================================
   // SELECT RESUME
@@ -25,20 +30,18 @@ const ReviewResume = () => {
 
     if (!file) return
 
-    const allowedTypes = [
-      'application/pdf',
-      'image/png',
-      'image/jpeg',
-      'image/jpg',
-    ]
+    if (file.type !== 'application/pdf') {
+      alert('Please upload a PDF resume.')
+      return
+    }
 
-    if (!allowedTypes.includes(file.type)) {
-      alert('Please upload a PDF, PNG, JPG or JPEG file.')
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Resume file size must be less than 5MB.')
       return
     }
 
     setSelectedFile(file)
-    setAnalysis(null)
+    setAnalysis('')
   }
 
   // =====================================================
@@ -50,12 +53,12 @@ const ReviewResume = () => {
   }
 
   // =====================================================
-  // REMOVE FILE
+  // REMOVE SELECTED FILE
   // =====================================================
 
   const handleRemoveFile = () => {
     setSelectedFile(null)
-    setAnalysis(null)
+    setAnalysis('')
 
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
@@ -69,41 +72,95 @@ const ReviewResume = () => {
   const onSubmitHandler = async (e) => {
     e.preventDefault()
 
-    if (!selectedFile) return
+    if (!selectedFile) {
+      alert('Please upload your resume first.')
+      return
+    }
 
     setLoading(true)
-    setAnalysis(null)
+    setAnalysis('')
 
-    // -----------------------------------------------------
-    // TEMPORARY DEMO
-    // Replace this section with your actual API call.
-    // -----------------------------------------------------
+    try {
+      const token = await getToken()
 
-    setTimeout(() => {
-      setAnalysis({
-        score: 82,
-        summary:
-          'Your resume has a strong technical foundation with good project experience. A few improvements to structure, impact statements and keyword optimization could make it stronger.',
-        strengths: [
-          'Strong technical skill set',
-          'Relevant project experience',
-          'Good use of modern technologies',
-          'Clear educational background',
-        ],
-        improvements: [
-          'Add measurable achievements',
-          'Improve project descriptions',
-          'Optimize keywords for ATS',
-          'Keep formatting consistent',
-        ],
-      })
+      if (!token) {
+        throw new Error(
+          'Authentication token not found. Please sign in again.'
+        )
+      }
 
+      const formData = new FormData()
+
+      // Must match upload.single("resume")
+      // in your backend route
+      formData.append('resume', selectedFile)
+
+      const { data } = await axios.post(
+        '/api/ai/resume-review',
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      if (!data.success) {
+        throw new Error(
+          data.message || 'Failed to review resume.'
+        )
+      }
+
+      if (!data.content) {
+        throw new Error(
+          'The server returned an empty resume review.'
+        )
+      }
+
+      setAnalysis(data.content)
+
+    } catch (error) {
+      console.error('Resume review error:', error)
+
+      alert(
+        error.response?.data?.message ||
+          error.message ||
+          'Something went wrong while reviewing your resume.'
+      )
+    } finally {
       setLoading(false)
+    }
+  }
 
-      console.log({
-        resume: selectedFile,
+  // =====================================================
+  // DOWNLOAD REVIEW
+  // =====================================================
+
+  const handleDownload = () => {
+    if (!analysis) return
+
+    try {
+      const blob = new Blob([analysis], {
+        type: 'text/plain;charset=utf-8',
       })
-    }, 1500)
+
+      const url = URL.createObjectURL(blob)
+
+      const link = document.createElement('a')
+
+      link.href = url
+      link.download = 'nexora-resume-review.txt'
+
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      URL.revokeObjectURL(url)
+
+    } catch (error) {
+      console.error('Download failed:', error)
+      alert('Failed to download the resume review.')
+    }
   }
 
   return (
@@ -233,7 +290,7 @@ const ReviewResume = () => {
             }}
           >
 
-            {/* Teal top line */}
+            {/* Top gradient */}
 
             <div
               style={{
@@ -255,9 +312,7 @@ const ReviewResume = () => {
               }}
             >
 
-              {/* =================================================
-                  CARD HEADER
-              ================================================== */}
+              {/* CARD HEADER */}
 
               <div
                 style={{
@@ -312,9 +367,7 @@ const ReviewResume = () => {
 
               </div>
 
-              {/* =================================================
-                  FORM
-              ================================================== */}
+              {/* FORM */}
 
               <form
                 onSubmit={onSubmitHandler}
@@ -325,9 +378,7 @@ const ReviewResume = () => {
                 }}
               >
 
-                {/* =================================================
-                    UPLOAD
-                ================================================== */}
+                {/* UPLOAD LABEL */}
 
                 <label
                   style={{
@@ -344,12 +395,16 @@ const ReviewResume = () => {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.png,.jpg,.jpeg"
+                  accept=".pdf,application/pdf"
                   onChange={handleFileChange}
                   style={{
                     display: 'none',
                   }}
                 />
+
+                {/* =================================================
+                    EMPTY UPLOAD
+                ================================================== */}
 
                 {!selectedFile ? (
 
@@ -407,7 +462,7 @@ const ReviewResume = () => {
                         color: '#94a3b8',
                       }}
                     >
-                      PDF, PNG or JPG
+                      PDF only • Maximum 5MB
                     </span>
 
                   </button>
@@ -434,6 +489,8 @@ const ReviewResume = () => {
                     }}
                   >
 
+                    {/* PDF ICON */}
+
                     <div
                       style={{
                         width: '62px',
@@ -451,6 +508,8 @@ const ReviewResume = () => {
                         color="#0891b2"
                       />
                     </div>
+
+                    {/* FILE DETAILS */}
 
                     <div
                       style={{
@@ -506,6 +565,8 @@ const ReviewResume = () => {
 
                     </div>
 
+                    {/* REMOVE FILE */}
+
                     <button
                       type="button"
                       onClick={handleRemoveFile}
@@ -533,7 +594,7 @@ const ReviewResume = () => {
                   </div>
                 )}
 
-                {/* Helper */}
+                {/* HELPER TEXT */}
 
                 <p
                   style={{
@@ -542,7 +603,7 @@ const ReviewResume = () => {
                     color: '#94a3b8',
                   }}
                 >
-                  Supports PDF, PNG, JPG and JPEG formats.
+                  Upload a PDF resume with selectable text. Maximum size: 5MB.
                 </p>
 
                 {/* =================================================
@@ -598,6 +659,7 @@ const ReviewResume = () => {
                 </button>
 
               </form>
+
             </div>
           </div>
 
@@ -620,7 +682,7 @@ const ReviewResume = () => {
             }}
           >
 
-            {/* Teal top line */}
+            {/* TOP GRADIENT */}
 
             <div
               style={{
@@ -633,7 +695,7 @@ const ReviewResume = () => {
             />
 
             {/* =================================================
-                HEADER
+                RESULTS HEADER
             ================================================== */}
 
             <div
@@ -694,18 +756,45 @@ const ReviewResume = () => {
                         color: '#94a3b8',
                       }}
                     >
-                      Your AI-powered resume analysis will
-                      appear here
+                      Key findings from your resume
                     </p>
                   </div>
 
                 </div>
 
+                {/* DOWNLOAD */}
+
+                {analysis && (
+                  <button
+                    type="button"
+                    onClick={handleDownload}
+                    title="Download review"
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '8px',
+                      border:
+                        '1px solid #e2e8f0',
+                      backgroundColor: '#ffffff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <Download
+                      size={14}
+                      color="#64748b"
+                    />
+                  </button>
+                )}
+
               </div>
+
             </div>
 
             {/* =================================================
-                RESULTS
+                RESULTS CONTENT
             ================================================== */}
 
             <div
@@ -719,14 +808,14 @@ const ReviewResume = () => {
             >
 
               {/* =================================================
-                  LOADING
+                  LOADING STATE
               ================================================== */}
 
               {loading && (
                 <div
                   style={{
                     width: '100%',
-                    height: '100%',
+                    minHeight: '320px',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
@@ -777,38 +866,41 @@ const ReviewResume = () => {
               )}
 
               {/* =================================================
-                  ANALYSIS RESULT
+                  SHORT AI REVIEW
               ================================================== */}
 
               {!loading && analysis && (
                 <div
+                  className="resume-analysis"
                   style={{
                     width: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '14px',
+                    boxSizing: 'border-box',
+                    borderRadius: '11px',
+                    backgroundColor: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    padding: '20px',
                   }}
                 >
 
-                  {/* Score */}
+                  {/* RESULT HEADER */}
 
                   <div
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '16px',
-                      padding: '14px',
-                      borderRadius: '10px',
-                      backgroundColor: '#f0fdfa',
-                      border: '1px solid #ccfbf1',
+                      gap: '10px',
+                      marginBottom: '18px',
+                      paddingBottom: '14px',
+                      borderBottom:
+                        '1px solid #e2e8f0',
                     }}
                   >
 
                     <div
                       style={{
-                        width: '64px',
-                        height: '64px',
-                        borderRadius: '50%',
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '9px',
                         background:
                           'linear-gradient(135deg, #06b6d4, #14b8a6)',
                         display: 'flex',
@@ -817,169 +909,202 @@ const ReviewResume = () => {
                         flexShrink: 0,
                       }}
                     >
-                      <span
-                        style={{
-                          color: '#ffffff',
-                          fontSize: '19px',
-                          fontWeight: 700,
-                        }}
-                      >
-                        {analysis.score}
-                      </span>
+                      <Sparkles
+                        size={18}
+                        color="#ffffff"
+                      />
                     </div>
 
                     <div>
-                      <p
+                      <h3
                         style={{
                           margin: 0,
-                          fontSize: '12px',
+                          fontSize: '14px',
                           fontWeight: 600,
-                          color: '#334155',
+                          color: '#0f172a',
                         }}
                       >
-                        Resume Score
-                      </p>
+                        Resume Summary
+                      </h3>
 
                       <p
                         style={{
-                          margin: '5px 0 0',
+                          margin: '3px 0 0',
                           fontSize: '10px',
-                          lineHeight: 1.5,
-                          color: '#64748b',
+                          color: '#94a3b8',
                         }}
                       >
-                        Overall resume quality based on AI
-                        analysis.
+                        Key findings from Nexora AI
                       </p>
                     </div>
 
                   </div>
 
-                  {/* Summary */}
+                  {/* =================================================
+                      MARKDOWN CONTENT
+                  ================================================== */}
 
-                  <div>
-                    <h3
-                      style={{
-                        margin: 0,
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        color: '#0f172a',
-                      }}
-                    >
-                      Overall Feedback
-                    </h3>
+                  <ReactMarkdown
+                    components={{
 
-                    <p
-                      style={{
-                        margin: '7px 0 0',
-                        fontSize: '11px',
-                        lineHeight: 1.65,
-                        color: '#64748b',
-                      }}
-                    >
-                      {analysis.summary}
-                    </p>
-                  </div>
+                      h1: ({ children }) => (
+                        <h1
+                          style={{
+                            margin:
+                              '18px 0 10px',
+                            fontSize: '18px',
+                            lineHeight: 1.4,
+                            fontWeight: 700,
+                            color: '#0f172a',
+                          }}
+                        >
+                          {children}
+                        </h1>
+                      ),
 
-                  {/* Strengths */}
+                      h2: ({ children }) => (
+                        <h2
+                          style={{
+                            margin:
+                              '18px 0 9px',
+                            fontSize: '16px',
+                            lineHeight: 1.4,
+                            fontWeight: 700,
+                            color: '#0f172a',
+                          }}
+                        >
+                          {children}
+                        </h2>
+                      ),
 
-                  <div>
+                      h3: ({ children }) => (
+                        <h3
+                          style={{
+                            margin:
+                              '17px 0 9px',
+                            fontSize: '14px',
+                            lineHeight: 1.45,
+                            fontWeight: 700,
+                            color: '#0891b2',
+                          }}
+                        >
+                          {children}
+                        </h3>
+                      ),
 
-                    <h3
-                      style={{
-                        margin: 0,
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        color: '#0f172a',
-                      }}
-                    >
-                      Strengths
-                    </h3>
+                      p: ({ children }) => (
+                        <p
+                          style={{
+                            margin:
+                              '7px 0',
+                            fontSize: '11px',
+                            lineHeight: 1.7,
+                            color: '#475569',
+                          }}
+                        >
+                          {children}
+                        </p>
+                      ),
 
-                    <div
-                      style={{
-                        marginTop: '8px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '6px',
-                      }}
-                    >
-                      {analysis.strengths.map(
-                        (item, index) => (
-                          <div
-                            key={index}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '7px',
-                              fontSize: '10px',
-                              color: '#64748b',
-                            }}
-                          >
-                            <CheckCircle2
-                              size={14}
-                              color="#06b6d4"
-                            />
-                            {item}
-                          </div>
-                        )
-                      )}
-                    </div>
+                      strong: ({ children }) => (
+                        <strong
+                          style={{
+                            color: '#0f172a',
+                            fontWeight: 700,
+                          }}
+                        >
+                          {children}
+                        </strong>
+                      ),
 
-                  </div>
+                      ul: ({ children }) => (
+                        <ul
+                          style={{
+                            margin:
+                              '7px 0 14px',
+                            paddingLeft: '20px',
+                          }}
+                        >
+                          {children}
+                        </ul>
+                      ),
 
-                  {/* Improvements */}
+                      ol: ({ children }) => (
+                        <ol
+                          style={{
+                            margin:
+                              '7px 0 14px',
+                            paddingLeft: '20px',
+                          }}
+                        >
+                          {children}
+                        </ol>
+                      ),
 
-                  <div>
+                      li: ({ children }) => (
+                        <li
+                          style={{
+                            marginBottom: '6px',
+                            paddingLeft: '3px',
+                            fontSize: '11px',
+                            lineHeight: 1.65,
+                            color: '#475569',
+                          }}
+                        >
+                          {children}
+                        </li>
+                      ),
 
-                    <h3
-                      style={{
-                        margin: 0,
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        color: '#0f172a',
-                      }}
-                    >
-                      Suggested Improvements
-                    </h3>
+                      hr: () => (
+                        <hr
+                          style={{
+                            margin:
+                              '16px 0',
+                            border: 0,
+                            borderTop:
+                              '1px solid #e2e8f0',
+                          }}
+                        />
+                      ),
 
-                    <div
-                      style={{
-                        marginTop: '8px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '6px',
-                      }}
-                    >
-                      {analysis.improvements.map(
-                        (item, index) => (
-                          <div
-                            key={index}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '7px',
-                              fontSize: '10px',
-                              color: '#64748b',
-                            }}
-                          >
-                            <span
-                              style={{
-                                width: '6px',
-                                height: '6px',
-                                borderRadius: '50%',
-                                backgroundColor:
-                                  '#0891b2',
-                                flexShrink: 0,
-                              }}
-                            />
-                            {item}
-                          </div>
-                        )
-                      )}
-                    </div>
+                      blockquote: ({ children }) => (
+                        <blockquote
+                          style={{
+                            margin:
+                              '12px 0',
+                            padding:
+                              '10px 14px',
+                            borderLeft:
+                              '3px solid #06b6d4',
+                            backgroundColor:
+                              '#ecfeff',
+                            borderRadius:
+                              '0 7px 7px 0',
+                          }}
+                        >
+                          {children}
+                        </blockquote>
+                      ),
 
-                  </div>
+                      code: ({ children }) => (
+                        <code
+                          style={{
+                            padding:
+                              '2px 5px',
+                            borderRadius: '4px',
+                            backgroundColor:
+                              '#e2e8f0',
+                            color: '#0f172a',
+                            fontSize: '10px',
+                          }}
+                        >
+                          {children}
+                        </code>
+                      ),
+                    }}
+                  >
+                    {analysis}
+                  </ReactMarkdown>
 
                 </div>
               )}
@@ -992,7 +1117,7 @@ const ReviewResume = () => {
                 <div
                   style={{
                     width: '100%',
-                    height: '100%',
+                    minHeight: '320px',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
@@ -1038,7 +1163,7 @@ const ReviewResume = () => {
                       color: '#94a3b8',
                     }}
                   >
-                    Upload your resume and click
+                    Upload your PDF resume and click
                     "Review Resume" to get started.
                   </p>
 
@@ -1047,6 +1172,7 @@ const ReviewResume = () => {
 
             </div>
           </div>
+
         </div>
 
         {/* =====================================================
@@ -1089,8 +1215,18 @@ const ReviewResume = () => {
               gap: 18px !important;
             }
           }
+
+          .resume-analysis ul li::marker {
+            color: #06b6d4;
+          }
+
+          .resume-analysis ol li::marker {
+            color: #0891b2;
+            font-weight: 600;
+          }
         `}
       </style>
+
     </div>
   )
 }

@@ -7,21 +7,60 @@ import Plan from '../components/Plan'
 import Footer from '../components/Footer'
 
 const Home = () => {
+
   return (
     <div
-      className='min-h-screen w-full overflow-x-hidden'
+      className="min-h-screen w-full overflow-x-hidden"
       style={{
         background:
-          'radial-gradient(circle at 20% 20%, rgba(91, 231, 255, 0.18), transparent 35%), radial-gradient(circle at 80% 25%, rgba(180, 120, 255, 0.18), transparent 35%), linear-gradient(135deg, #f4fbff 0%, #fff9fc 50%, #f8f7ff 100%)',
+          'linear-gradient(135deg, #f7fcff 0%, #fffaff 50%, #f8f7ff 100%)',
       }}
     >
+
       <Navbar />
-      <Hero />
-      <AiTools />
-      <Testimonial />
-      <Plan />
+
+      <main>
+
+        <Hero />
+
+        {/* ==========================================
+            AI TOOLS
+        =========================================== */}
+
+        <section
+          id="ai-tools"
+          style={{
+            width: '100%',
+          }}
+        >
+          <AiTools />
+        </section>
+
+
+        {/* ==========================================
+            TESTIMONIALS
+        =========================================== */}
+
+        <Testimonial />
+
+
+        {/* ==========================================
+            PLANS
+        =========================================== */}
+
+        <Plan />
+
+      </main>
+
+
+      {/* ==========================================
+          FOOTER
+      =========================================== */}
+
       <Footer />
+
     </div>
   )
 }
+
 export default Home

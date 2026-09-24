@@ -1,16 +1,20 @@
 import React, { useRef, useState } from 'react'
+import axios from 'axios'
+import { useAuth } from '@clerk/react'
 import {
   Scissors,
   Sparkles,
   Upload,
-  Image as ImageIcon,
   Loader2,
   Download,
   X,
 } from 'lucide-react'
 
+axios.defaults.baseURL = import.meta.env.VITE_BASE_URL
+
 const RemoveObject = () => {
   const fileInputRef = useRef(null)
+  const { getToken } = useAuth()
 
   const [selectedFile, setSelectedFile] = useState(null)
   const [previewUrl, setPreviewUrl] = useState('')
@@ -32,11 +36,16 @@ const RemoveObject = () => {
       return
     }
 
-    setSelectedFile(file)
-    setProcessedImage('')
+    // Clean previous preview URL
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl)
+    }
 
     const url = URL.createObjectURL(file)
+
+    setSelectedFile(file)
     setPreviewUrl(url)
+    setProcessedImage('')
   }
 
   // =====================================================
@@ -48,13 +57,18 @@ const RemoveObject = () => {
   }
 
   // =====================================================
-  // REMOVE IMAGE
+  // REMOVE SELECTED IMAGE
   // =====================================================
 
   const handleRemoveFile = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl)
+    }
+
     setSelectedFile(null)
     setPreviewUrl('')
     setProcessedImage('')
+    setObjectName('')
 
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
@@ -81,21 +95,51 @@ const RemoveObject = () => {
     setLoading(true)
     setProcessedImage('')
 
-    // -----------------------------------------------------
-    // TEMPORARY DEMO
-    // Replace this with your actual backend/API call.
-    // -----------------------------------------------------
+    try {
+      const token = await getToken()
 
-    setTimeout(() => {
-      setProcessedImage(previewUrl)
+      if (!token) {
+        throw new Error('Authentication token not found. Please sign in again.')
+      }
 
+      const formData = new FormData()
+
+      // Must match upload.single("image") in backend
+      formData.append('image', selectedFile)
+
+      // Object description
+      formData.append('object', objectName.trim())
+
+      const { data } = await axios.post(
+        '/api/ai/remove-image-object',
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      if (!data.success) {
+        throw new Error(
+          data.message || 'Failed to remove object from image.'
+        )
+      }
+
+      setProcessedImage(data.content)
+
+    } catch (error) {
+      console.error('Object removal error:', error)
+
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        'Something went wrong while removing the object.'
+
+      alert(message)
+    } finally {
       setLoading(false)
-
-      console.log({
-        file: selectedFile,
-        objectName,
-      })
-    }, 1500)
+    }
   }
 
   // =====================================================
@@ -107,8 +151,12 @@ const RemoveObject = () => {
 
     try {
       const response = await fetch(processedImage)
-      const blob = await response.blob()
 
+      if (!response.ok) {
+        throw new Error('Unable to download image.')
+      }
+
+      const blob = await response.blob()
       const url = URL.createObjectURL(blob)
 
       const link = document.createElement('a')
@@ -123,8 +171,13 @@ const RemoveObject = () => {
       URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Download failed:', error)
+      alert('Failed to download the processed image.')
     }
   }
+
+  // =====================================================
+  // RENDER
+  // =====================================================
 
   return (
     <div
@@ -144,7 +197,6 @@ const RemoveObject = () => {
           margin: '0 auto',
         }}
       >
-
         {/* =====================================================
             PAGE HEADER
         ====================================================== */}
@@ -233,7 +285,6 @@ const RemoveObject = () => {
             width: '100%',
           }}
         >
-
           {/* ===================================================
               LEFT CARD
           ==================================================== */}
@@ -252,8 +303,7 @@ const RemoveObject = () => {
               boxSizing: 'border-box',
             }}
           >
-
-            {/* Blue → Violet top line */}
+            {/* Top line */}
 
             <div
               style={{
@@ -274,7 +324,6 @@ const RemoveObject = () => {
                 flex: 1,
               }}
             >
-
               {/* =================================================
                   CARD HEADER
               ================================================== */}
@@ -287,7 +336,6 @@ const RemoveObject = () => {
                   marginBottom: '22px',
                 }}
               >
-
                 <div
                   style={{
                     width: '44px',
@@ -329,7 +377,6 @@ const RemoveObject = () => {
                     Upload an image and tell AI what to remove
                   </p>
                 </div>
-
               </div>
 
               {/* =================================================
@@ -344,7 +391,6 @@ const RemoveObject = () => {
                   flex: 1,
                 }}
               >
-
                 {/* =================================================
                     UPLOAD
                 ================================================== */}
@@ -372,7 +418,6 @@ const RemoveObject = () => {
                 />
 
                 {!selectedFile ? (
-
                   <button
                     type="button"
                     onClick={handleChooseFile}
@@ -391,7 +436,6 @@ const RemoveObject = () => {
                       boxSizing: 'border-box',
                     }}
                   >
-
                     <div
                       style={{
                         width: '40px',
@@ -429,11 +473,8 @@ const RemoveObject = () => {
                     >
                       JPG, PNG or WEBP
                     </span>
-
                   </button>
-
                 ) : (
-
                   <div
                     style={{
                       width: '100%',
@@ -449,7 +490,6 @@ const RemoveObject = () => {
                       gap: '11px',
                     }}
                   >
-
                     <div
                       style={{
                         width: '80px',
@@ -546,7 +586,6 @@ const RemoveObject = () => {
                         color="#64748b"
                       />
                     </button>
-
                   </div>
                 )}
 
@@ -559,7 +598,6 @@ const RemoveObject = () => {
                     marginTop: '20px',
                   }}
                 >
-
                   <label
                     htmlFor="object-name"
                     style={{
@@ -609,7 +647,6 @@ const RemoveObject = () => {
                     Describe only the object you want AI to
                     remove.
                   </p>
-
                 </div>
 
                 {/* =================================================
@@ -654,7 +691,6 @@ const RemoveObject = () => {
                       '0 3px 8px rgba(79,70,229,0.18)',
                   }}
                 >
-
                   {loading ? (
                     <>
                       <Loader2
@@ -669,9 +705,7 @@ const RemoveObject = () => {
                       Remove Object
                     </>
                   )}
-
                 </button>
-
               </form>
             </div>
           </div>
@@ -694,8 +728,7 @@ const RemoveObject = () => {
               boxSizing: 'border-box',
             }}
           >
-
-            {/* Violet top line */}
+            {/* Top line */}
 
             <div
               style={{
@@ -707,16 +740,13 @@ const RemoveObject = () => {
               }}
             />
 
-            {/* =================================================
-                HEADER
-            ================================================== */}
+            {/* HEADER */}
 
             <div
               style={{
                 padding: '22px 24px 18px',
               }}
             >
-
               <div
                 style={{
                   display: 'flex',
@@ -724,7 +754,6 @@ const RemoveObject = () => {
                   justifyContent: 'space-between',
                 }}
               >
-
                 <div
                   style={{
                     display: 'flex',
@@ -732,7 +761,6 @@ const RemoveObject = () => {
                     gap: '12px',
                   }}
                 >
-
                   <div
                     style={{
                       width: '44px',
@@ -772,7 +800,6 @@ const RemoveObject = () => {
                       Your processed image will appear here
                     </p>
                   </div>
-
                 </div>
 
                 {/* Download */}
@@ -801,13 +828,10 @@ const RemoveObject = () => {
                     />
                   </button>
                 )}
-
               </div>
             </div>
 
-            {/* =================================================
-                IMAGE AREA
-            ================================================== */}
+            {/* IMAGE AREA */}
 
             <div
               style={{
@@ -817,16 +841,14 @@ const RemoveObject = () => {
                 boxSizing: 'border-box',
               }}
             >
-
-              {/* =================================================
-                  LOADING
-              ================================================== */}
+              {/* LOADING */}
 
               {loading && (
                 <div
                   style={{
                     width: '100%',
                     height: '100%',
+                    minHeight: '300px',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
@@ -834,7 +856,6 @@ const RemoveObject = () => {
                     textAlign: 'center',
                   }}
                 >
-
                   <div
                     style={{
                       width: '60px',
@@ -872,19 +893,17 @@ const RemoveObject = () => {
                   >
                     Nexora AI is processing your image...
                   </p>
-
                 </div>
               )}
 
-              {/* =================================================
-                  PROCESSED IMAGE
-              ================================================== */}
+              {/* PROCESSED IMAGE */}
 
               {!loading && processedImage && (
                 <div
                   style={{
                     width: '100%',
                     height: '100%',
+                    minHeight: '300px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -893,7 +912,6 @@ const RemoveObject = () => {
                     overflow: 'hidden',
                   }}
                 >
-
                   <img
                     src={processedImage}
                     alt="Processed"
@@ -904,19 +922,17 @@ const RemoveObject = () => {
                       borderRadius: '8px',
                     }}
                   />
-
                 </div>
               )}
 
-              {/* =================================================
-                  EMPTY STATE
-              ================================================== */}
+              {/* EMPTY STATE */}
 
               {!loading && !processedImage && (
                 <div
                   style={{
                     width: '100%',
                     height: '100%',
+                    minHeight: '300px',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
@@ -924,7 +940,6 @@ const RemoveObject = () => {
                     textAlign: 'center',
                   }}
                 >
-
                   <div
                     style={{
                       width: '62px',
@@ -965,10 +980,8 @@ const RemoveObject = () => {
                     Upload an image and click
                     "Remove Object" to get started.
                   </p>
-
                 </div>
               )}
-
             </div>
           </div>
         </div>

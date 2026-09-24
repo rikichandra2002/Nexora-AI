@@ -7,8 +7,14 @@ import {
   Globe,
   Lock,
 } from 'lucide-react'
+import axios from 'axios'
+import { useAuth } from '@clerk/react'
+
+axios.defaults.baseURL = import.meta.env.VITE_BASE_URL
 
 const GenerateImages = () => {
+  const { getToken } = useAuth()
+
   const imageStyles = [
     'Realistic',
     'Ghibli Style',
@@ -26,6 +32,10 @@ const GenerateImages = () => {
   const [loading, setLoading] = useState(false)
   const [isPublic, setIsPublic] = useState(false)
 
+  // =====================================================
+  // GENERATE IMAGE
+  // =====================================================
+
   const onSubmitHandler = async (e) => {
     e.preventDefault()
 
@@ -34,21 +44,51 @@ const GenerateImages = () => {
     setLoading(true)
     setGeneratedImage(null)
 
-    // Temporary demo
-    setTimeout(() => {
-      setGeneratedImage(
-        'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=900&q=80'
+    try {
+      const token = await getToken()
+
+      const finalPrompt = `
+${prompt.trim()}
+
+Visual style: ${selectedStyle}
+`
+
+      const { data } = await axios.post(
+        '/api/ai/generate-image',
+        {
+          prompt: finalPrompt,
+          publish: isPublic,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       )
 
-      setLoading(false)
+      if (!data.success) {
+        throw new Error(
+          data.message || 'Failed to generate image'
+        )
+      }
 
-      console.log({
-        prompt,
-        style: selectedStyle,
-        isPublic,
-      })
-    }, 1500)
+      setGeneratedImage(data.content)
+    } catch (error) {
+      console.error('Image generation error:', error)
+
+      alert(
+        error.response?.data?.message ||
+          error.message ||
+          'Something went wrong while generating the image.'
+      )
+    } finally {
+      setLoading(false)
+    }
   }
+
+  // =====================================================
+  // DOWNLOAD IMAGE
+  // =====================================================
 
   const handleDownload = async () => {
     if (!generatedImage) return
@@ -70,6 +110,8 @@ const GenerateImages = () => {
       URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Download failed:', error)
+
+      alert('Unable to download the image.')
     }
   }
 
@@ -78,7 +120,7 @@ const GenerateImages = () => {
       style={{
         width: '100%',
         minHeight: '100%',
-        backgroundColor: '#f5f8fc',
+        backgroundColor: '#fdf7fa',
         padding: '32px 40px 50px 60px',
         boxSizing: 'border-box',
         overflowY: 'auto',
@@ -91,6 +133,7 @@ const GenerateImages = () => {
           margin: '0 auto',
         }}
       >
+
         {/* =====================================================
             PAGE HEADER
         ====================================================== */}
@@ -127,6 +170,8 @@ const GenerateImages = () => {
             </p>
           </div>
 
+          {/* Breadcrumb */}
+
           <div
             style={{
               display: 'flex',
@@ -135,7 +180,11 @@ const GenerateImages = () => {
               fontSize: '12px',
             }}
           >
-            <span style={{ color: '#94a3b8' }}>
+            <span
+              style={{
+                color: '#94a3b8',
+              }}
+            >
               Dashboard
             </span>
 
@@ -150,7 +199,7 @@ const GenerateImages = () => {
 
             <span
               style={{
-                color: '#16a34a',
+                color: '#ec4899',
                 fontWeight: 500,
               }}
             >
@@ -164,15 +213,16 @@ const GenerateImages = () => {
         ====================================================== */}
 
         <div
-  className="generate-images-grid"
-  style={{
-    display: 'grid',
-    gridTemplateColumns:
-      'minmax(0, 1fr) minmax(0, 1fr)',
-    gap: '28px',
-    width: '100%',
-  }}
->
+          className="generate-images-grid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns:
+              'minmax(0, 1fr) minmax(0, 1fr)',
+            gap: '28px',
+            width: '100%',
+          }}
+        >
+
           {/* ===================================================
               LEFT CARD
           ==================================================== */}
@@ -181,7 +231,7 @@ const GenerateImages = () => {
             style={{
               minHeight: '430px',
               backgroundColor: '#ffffff',
-              border: '1px solid #e2e8f0',
+              border: '1px solid #f1d9e5',
               borderRadius: '14px',
               boxShadow:
                 '0 2px 6px rgba(15, 23, 42, 0.06)',
@@ -191,14 +241,15 @@ const GenerateImages = () => {
               boxSizing: 'border-box',
             }}
           >
-            {/* Green top line */}
+
+            {/* Pink top line */}
 
             <div
               style={{
                 height: '4px',
                 width: '100%',
                 background:
-                  'linear-gradient(90deg, #16a34a, #4ade80)',
+                  'linear-gradient(90deg, #ec4899, #f472b6)',
                 flexShrink: 0,
               }}
             />
@@ -212,7 +263,10 @@ const GenerateImages = () => {
                 flex: 1,
               }}
             >
-              {/* Header */}
+
+              {/* =================================================
+                  HEADER
+              ================================================== */}
 
               <div
                 style={{
@@ -228,7 +282,7 @@ const GenerateImages = () => {
                     height: '44px',
                     borderRadius: '12px',
                     background:
-                      'linear-gradient(135deg, #16a34a, #4ade80)',
+                      'linear-gradient(135deg, #ec4899, #f472b6)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -265,6 +319,10 @@ const GenerateImages = () => {
                 </div>
               </div>
 
+              {/* =================================================
+                  FORM
+              ================================================== */}
+
               <form
                 onSubmit={onSubmitHandler}
                 style={{
@@ -273,6 +331,7 @@ const GenerateImages = () => {
                   flex: 1,
                 }}
               >
+
                 {/* =================================================
                     PROMPT
                 ================================================== */}
@@ -305,7 +364,7 @@ const GenerateImages = () => {
                       padding: '11px 13px',
                       boxSizing: 'border-box',
                       resize: 'none',
-                      border: '1px solid #d8e0ea',
+                      border: '1px solid #f1d9e5',
                       borderRadius: '9px',
                       outline: 'none',
                       backgroundColor: '#ffffff',
@@ -360,21 +419,28 @@ const GenerateImages = () => {
                             height: '30px',
                             padding: '0 13px',
                             borderRadius: '8px',
+
                             border: selected
-                              ? '1px solid #86efac'
+                              ? '1px solid #f9a8d4'
                               : '1px solid #e2e8f0',
+
                             backgroundColor: selected
-                              ? '#ecfdf3'
+                              ? '#fdf2f8'
                               : '#ffffff',
+
                             color: selected
-                              ? '#15803d'
+                              ? '#db2777'
                               : '#64748b',
+
                             fontSize: '10px',
                             fontWeight: selected
                               ? 600
                               : 500,
+
                             cursor: 'pointer',
+
                             whiteSpace: 'nowrap',
+
                             transition:
                               'all 0.2s ease',
                           }}
@@ -396,14 +462,15 @@ const GenerateImages = () => {
                     height: '46px',
                     padding: '0 12px',
                     borderRadius: '9px',
-                    border: '1px solid #e2e8f0',
-                    backgroundColor: '#fafbfc',
+                    border: '1px solid #f1d9e5',
+                    backgroundColor: '#fffafd',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     boxSizing: 'border-box',
                   }}
                 >
+
                   <div
                     style={{
                       display: 'flex',
@@ -416,9 +483,11 @@ const GenerateImages = () => {
                         width: '27px',
                         height: '27px',
                         borderRadius: '7px',
+
                         backgroundColor: isPublic
-                          ? '#ecfdf3'
+                          ? '#fdf2f8'
                           : '#f1f5f9',
+
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -427,7 +496,7 @@ const GenerateImages = () => {
                       {isPublic ? (
                         <Globe
                           size={14}
-                          color="#16a34a"
+                          color="#ec4899"
                         />
                       ) : (
                         <Lock
@@ -481,17 +550,22 @@ const GenerateImages = () => {
                       padding: '2px',
                       border: 'none',
                       borderRadius: '999px',
+
                       backgroundColor: isPublic
-                        ? '#16a34a'
+                        ? '#ec4899'
                         : '#cbd5e1',
+
                       display: 'flex',
                       alignItems: 'center',
+
                       justifyContent: isPublic
                         ? 'flex-end'
                         : 'flex-start',
+
                       cursor: 'pointer',
                       flexShrink: 0,
                       boxSizing: 'border-box',
+
                       transition:
                         'background-color 0.2s ease',
                     }}
@@ -522,21 +596,28 @@ const GenerateImages = () => {
                     marginTop: '16px',
                     border: 'none',
                     borderRadius: '9px',
+
                     background:
-                      'linear-gradient(90deg, #16a34a, #4ade80)',
+                      'linear-gradient(90deg, #ec4899, #f472b6)',
+
                     color: '#ffffff',
+
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px',
+
                     fontSize: '12px',
                     fontWeight: 600,
+
                     cursor: loading
                       ? 'not-allowed'
                       : 'pointer',
+
                     opacity: loading ? 0.7 : 1,
+
                     boxShadow:
-                      '0 3px 8px rgba(22,163,74,0.18)',
+                      '0 3px 8px rgba(236,72,153,0.20)',
                   }}
                 >
                   {loading ? (
@@ -566,7 +647,7 @@ const GenerateImages = () => {
             style={{
               minHeight: '430px',
               backgroundColor: '#ffffff',
-              border: '1px solid #e2e8f0',
+              border: '1px solid #f1d9e5',
               borderRadius: '14px',
               boxShadow:
                 '0 2px 6px rgba(15, 23, 42, 0.06)',
@@ -576,19 +657,22 @@ const GenerateImages = () => {
               boxSizing: 'border-box',
             }}
           >
-            {/* Green top line */}
+
+            {/* Pink top line */}
 
             <div
               style={{
                 height: '4px',
                 width: '100%',
                 background:
-                  'linear-gradient(90deg, #22c55e, #86efac)',
+                  'linear-gradient(90deg, #ec4899, #f9a8d4)',
                 flexShrink: 0,
               }}
             />
 
-            {/* Header */}
+            {/* =================================================
+                HEADER
+            ================================================== */}
 
             <div
               style={{
@@ -602,6 +686,7 @@ const GenerateImages = () => {
                   justifyContent: 'space-between',
                 }}
               >
+
                 <div
                   style={{
                     display: 'flex',
@@ -614,7 +699,7 @@ const GenerateImages = () => {
                       width: '44px',
                       height: '44px',
                       borderRadius: '12px',
-                      backgroundColor: '#ecfdf3',
+                      backgroundColor: '#fdf2f8',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -622,7 +707,7 @@ const GenerateImages = () => {
                   >
                     <ImageIcon
                       size={21}
-                      color="#16a34a"
+                      color="#ec4899"
                     />
                   </div>
 
@@ -651,6 +736,8 @@ const GenerateImages = () => {
                   </div>
                 </div>
 
+                {/* DOWNLOAD */}
+
                 {generatedImage && (
                   <button
                     type="button"
@@ -660,7 +747,7 @@ const GenerateImages = () => {
                       width: '32px',
                       height: '32px',
                       borderRadius: '8px',
-                      border: '1px solid #e2e8f0',
+                      border: '1px solid #f1d9e5',
                       backgroundColor: '#ffffff',
                       display: 'flex',
                       alignItems: 'center',
@@ -670,7 +757,7 @@ const GenerateImages = () => {
                   >
                     <Download
                       size={14}
-                      color="#64748b"
+                      color="#ec4899"
                     />
                   </button>
                 )}
@@ -689,7 +776,10 @@ const GenerateImages = () => {
                 boxSizing: 'border-box',
               }}
             >
-              {/* Loading */}
+
+              {/* =================================================
+                  LOADING
+              ================================================== */}
 
               {loading && (
                 <div
@@ -708,7 +798,7 @@ const GenerateImages = () => {
                       width: '60px',
                       height: '60px',
                       borderRadius: '50%',
-                      backgroundColor: '#ecfdf3',
+                      backgroundColor: '#fdf2f8',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -716,7 +806,7 @@ const GenerateImages = () => {
                   >
                     <Sparkles
                       size={27}
-                      color="#16a34a"
+                      color="#ec4899"
                     />
                   </div>
 
@@ -743,7 +833,9 @@ const GenerateImages = () => {
                 </div>
               )}
 
-              {/* Generated image */}
+              {/* =================================================
+                  GENERATED IMAGE
+              ================================================== */}
 
               {!loading && generatedImage && (
                 <div
@@ -757,18 +849,21 @@ const GenerateImages = () => {
                 >
                   <img
                     src={generatedImage}
-                    alt="Generated"
+                    alt="Generated by Nexora AI"
                     style={{
                       width: '100%',
                       height: '100%',
                       objectFit: 'contain',
                       borderRadius: '10px',
+                      display: 'block',
                     }}
                   />
                 </div>
               )}
 
-              {/* Empty state */}
+              {/* =================================================
+                  EMPTY STATE
+              ================================================== */}
 
               {!loading && !generatedImage && (
                 <div
@@ -787,7 +882,7 @@ const GenerateImages = () => {
                       width: '62px',
                       height: '62px',
                       borderRadius: '50%',
-                      backgroundColor: '#f5faf7',
+                      backgroundColor: '#fdf7fa',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -795,7 +890,7 @@ const GenerateImages = () => {
                   >
                     <ImageIcon
                       size={30}
-                      color="#b9d5c2"
+                      color="#f3a6c8"
                     />
                   </div>
 
@@ -850,13 +945,21 @@ const GenerateImages = () => {
         </div>
       </div>
 
-      {/* Responsive */}
+      {/* =====================================================
+          RESPONSIVE CSS
+      ====================================================== */}
 
       <style>
         {`
           @media (max-width: 900px) {
             .generate-images-grid {
-              grid-template-columns: 1fr;
+              grid-template-columns: 1fr !important;
+            }
+          }
+
+          @media (max-width: 600px) {
+            .generate-images-grid {
+              gap: 18px !important;
             }
           }
         `}

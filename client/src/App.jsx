@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom'
 
 import Home from './pages/Home'
 import Layout from './pages/Layout'
+
 import Dashboard from './pages/Dashboard'
 import WriteArticle from './pages/WriteArticle'
 import BlogTitles from './pages/BlogTitles'
@@ -14,55 +15,114 @@ import Community from './pages/Community'
 
 import ProtectedRoute from './components/ProtectedRoute'
 
+import { Toaster } from 'react-hot-toast'
+
 const App = () => {
+
   return (
     <div>
+
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+        }}
+      />
+
       <Routes>
 
-        {/* =========================
-            PUBLIC ROUTES
-        ========================== */}
+        {/* ==========================================
+            PUBLIC HOME PAGE
+        =========================================== */}
 
-        <Route path="/" element={<Home />} />
+        <Route
+          path="/"
+          element={<Home />}
+        />
 
 
-        {/* =========================
-            PROTECTED AI ROUTES
-        ========================== */}
+        {/* ==========================================
+            PROTECTED AI APPLICATION
+        =========================================== */}
 
-        <Route element={<ProtectedRoute />}>
+        <Route
+          element={<ProtectedRoute />}
+        >
 
-          <Route path="/ai" element={<Layout />}>
+          <Route
+            path="/ai"
+            element={<Layout />}
+          >
 
-            {/* /ai */}
-            <Route index element={<Dashboard />} />
+            {/* Dashboard */}
 
-            {/* /ai/write-article */}
-            <Route path="write-article" element={<WriteArticle />} />
+            <Route
+              index
+              element={<Dashboard />}
+            />
 
-            {/* /ai/blog-titles */}
-            <Route path="blog-titles" element={<BlogTitles />} />
 
-            {/* /ai/generate-images */}
-            <Route path="generate-images" element={<GenerateImages />} />
+            {/* Write Article */}
 
-            {/* /ai/remove-background */}
-            <Route path="remove-background" element={<RemoveBackground />} />
+            <Route
+              path="write-article"
+              element={<WriteArticle />}
+            />
 
-            {/* /ai/remove-object */}
-            <Route path="remove-object" element={<RemoveObject />} />
 
-            {/* /ai/review-resume */}
-            <Route path="review-resume" element={<ReviewResume />} />
+            {/* Blog Titles */}
 
-            {/* /ai/community */}
-            <Route path="community" element={<Community />} />
+            <Route
+              path="blog-titles"
+              element={<BlogTitles />}
+            />
+
+
+            {/* Generate Images */}
+
+            <Route
+              path="generate-images"
+              element={<GenerateImages />}
+            />
+
+
+            {/* Remove Background */}
+
+            <Route
+              path="remove-background"
+              element={<RemoveBackground />}
+            />
+
+
+            {/* Remove Object */}
+
+            <Route
+              path="remove-object"
+              element={<RemoveObject />}
+            />
+
+
+            {/* Review Resume */}
+
+            <Route
+              path="review-resume"
+              element={<ReviewResume />}
+            />
+
+
+            {/* Community */}
+
+            <Route
+              path="community"
+              element={<Community />}
+            />
 
           </Route>
 
         </Route>
 
       </Routes>
+
     </div>
   )
 }
