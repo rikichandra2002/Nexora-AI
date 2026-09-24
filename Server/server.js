@@ -1,15 +1,11 @@
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
-import { clerkMiddleware, requireAuth } from "@clerk/express";
-
-import aiRouter from "./routes/aiRoutes.js";
-import userRouter from "./routes/userRoutes.js";
 
 const app = express();
 
 // ==========================================
-// MIDDLEWARE
+// BASIC MIDDLEWARE
 // ==========================================
 
 app.use(
@@ -22,45 +18,61 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-app.use(clerkMiddleware());
-
 // ==========================================
-// HOME ROUTE
+// TEST ROUTE
 // ==========================================
 
 app.get("/", (req, res) => {
-    res.status(200).json({
-        success: true,
-        message: "Nexora AI Server is Live!",
-    });
+    res.status(200).send("Nexora AI Server is Live!");
 });
 
 // ==========================================
-// AUTHENTICATION
+// LOAD CLERK + ROUTES
 // ==========================================
 
-app.use(requireAuth());
+const startRoutes = async () => {
+    try {
+        const { clerkMiddleware, requireAuth } = await import(
+            "@clerk/express"
+        );
+
+        const { default: aiRouter } = await import(
+            "./routes/aiRoutes.js"
+        );
+
+        const { default: userRouter } = await import(
+            "./routes/userRoutes.js"
+        );
+
+        // Clerk middleware
+        app.use(clerkMiddleware());
+
+        // Authentication
+        app.use(requireAuth());
+
+        // AI routes
+        app.use("/api/ai", aiRouter);
+
+        // User routes
+        app.use("/api/user", userRouter);
+
+        console.log("✅ Clerk and API routes loaded");
+    } catch (error) {
+        console.error("❌ Failed to load API routes:");
+        console.error(error);
+    }
+};
+
+await startRoutes();
 
 // ==========================================
-// AI ROUTES
-// ==========================================
-
-app.use("/api/ai", aiRouter);
-
-// ==========================================
-// USER ROUTES
-// ==========================================
-
-app.use("/api/user", userRouter);
-
-// ==========================================
-// 404 HANDLER
+// 404
 // ==========================================
 
 app.use((req, res) => {
     res.status(404).json({
         success: false,
-        message: "API route not found",
+        message: "Route not found",
         path: req.originalUrl,
     });
 });
@@ -70,7 +82,7 @@ app.use((req, res) => {
 // ==========================================
 
 app.use((err, req, res, next) => {
-    console.error("SERVER ERROR:", err);
+    console.error("❌ Server Error:", err);
 
     res.status(err.status || 500).json({
         success: false,
@@ -79,11 +91,24 @@ app.use((err, req, res, next) => {
 });
 
 // ==========================================
-// VERCEL
+// LOCAL DEVELOPMENT
 // ==========================================
 
-// IMPORTANT:
-// Do NOT use app.listen() on Vercel.
-// Vercel handles the server/function itself.
+if (!process.env.VERCEL) {
+    const PORT = process.env.PORT || 5000;
+
+    app.listen(PORT, () => {
+        console.log("");
+        console.log("==========================================");
+        console.log("🚀 Nexora AI Server is running");
+        console.log(`📡 http://localhost:${PORT}`);
+        console.log("==========================================");
+        console.log("");
+    });
+}
+
+// ==========================================
+// VERCEL
+// ==========================================
 
 export default app;
