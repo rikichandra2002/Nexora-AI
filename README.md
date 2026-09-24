@@ -2,6 +2,8 @@
 
 > An all-in-one AI-powered content creation platform for writing, image generation, image editing, blog title generation, and resume analysis.
 
+🌐 **[Live Demo](https://nexora-ai-zeta-six.vercel.app/)**
+
 Nexora AI is a modern full-stack AI web application designed to bring multiple AI-powered productivity tools into one simple and beautiful platform.
 
 ---
